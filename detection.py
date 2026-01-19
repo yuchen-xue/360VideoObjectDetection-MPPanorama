@@ -135,14 +135,14 @@ def video_detection(input_video_path, stereographic_image_size, FOV, output_imag
                         annotated_panoramas[fr_index] = output_panorama_np
                         panorama_detections[fr_index] = pano_detections
     
-    while futures.qsize() > 0:
-        future = futures.get()
-        output_panorama_np, pano_detections, fr_index, code = future.result()  # This line will block until the future is done
-        if code != 0:
-            print(f"Task failed, code: {code}")
-        else:
-            annotated_panoramas[fr_index] = output_panorama_np
-            panorama_detections[fr_index] = pano_detections
+            while futures.qsize() > 0:
+                future = futures.get()
+                output_panorama_np, pano_detections, fr_index, code = future.result()  # This line will block until the future is done
+                if code != 0:
+                    print(f"Task failed, code: {code}")
+                else:
+                    annotated_panoramas[fr_index] = output_panorama_np
+                    panorama_detections[fr_index] = pano_detections
 
     # Release video reader object
     video_reader.release()
@@ -262,7 +262,7 @@ def image_detection(input_panorama_path, stereographic_image_size, FOV, output_i
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="model-runs\\detect\\train\\weights\\yolov8n.onnx", help="Input your ONNX model.")
+    parser.add_argument("--model", default="model-runs/detect/train/weights/yolov8n.onnx", help="Input your ONNX model.")
     parser.add_argument("--video", help="Path to input 360 video.")
     parser.add_argument("--img", help="Path to input 360 image.")
     parser.add_argument("--stereo_image_size", help="The size in pixels of the stereographic images derived from the panorama", default="640x640")

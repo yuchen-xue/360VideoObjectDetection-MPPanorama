@@ -1,12 +1,10 @@
-import argparse
-
-import cv2.dnn
+import cv2
 import numpy as np
 
-from ultralytics.utils import ASSETS, yaml_load
+from ultralytics.utils import YAML
 from ultralytics.utils.checks import check_yaml
 
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]
+CLASSES = YAML.load(check_yaml("coco128.yaml"))["names"]
 colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 

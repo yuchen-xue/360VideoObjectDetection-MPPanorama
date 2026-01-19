@@ -5,16 +5,16 @@ import argparse
 import cv2.dnn
 import numpy as np
 
-from ultralytics.utils import ASSETS, yaml_load
+from ultralytics.utils import YAML
 from ultralytics.utils.checks import check_yaml
 from draw_boxes import draw_bounding_box
 from PIL import Image
 
-CLASSES = yaml_load(check_yaml("coco128.yaml"))["names"]
+CLASSES = YAML.load(check_yaml("coco128.yaml"))["names"]
 colors = np.random.uniform(0, 255, size=(len(CLASSES), 3))
 
 
-def detect(input_array, confidence_threshold=0.40, onnx_model="model-runs\\detect\\train\\weights\\yolov8n.onnx"):
+def detect(input_array, confidence_threshold=0.40, onnx_model="model-runs/detect/train/weights/yolov8n.onnx"):
     """
     Function:
     Load ONNX model, perform inference, draw bounding boxes, and display the output image.
@@ -59,7 +59,7 @@ def detect(input_array, confidence_threshold=0.40, onnx_model="model-runs\\detec
     # Iterate through output to collect bounding boxes, confidence scores, and class IDs
     for i in range(rows):
         classes_scores = outputs[0][i][4:]
-        (minScore, maxScore, minClassLoc, (x, maxClassIndex)) = cv2.minMaxLoc(classes_scores)
+        (_, maxScore, _, (_, maxClassIndex)) = cv2.minMaxLoc(classes_scores)
         if maxScore >= confidence_threshold:
             box = [
                 outputs[0][i][0] - (0.5 * outputs[0][i][2]),
@@ -111,7 +111,7 @@ def detect(input_array, confidence_threshold=0.40, onnx_model="model-runs\\detec
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model", default="model-runs\\detect\\train\\weights\\yolov8n.onnx", help="Input your ONNX model.")
+    parser.add_argument("--model", default="model-runs/detect/train/weights/yolov8n.onnx", help="Input your ONNX model.")
     parser.add_argument("--img", help="Path to input image.")
     parser.add_argument("--output", help="Path to output image.", default=None)
     args = parser.parse_args()
