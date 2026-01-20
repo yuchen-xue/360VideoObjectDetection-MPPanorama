@@ -23,7 +23,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 
 
-def video_detection(input_video_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path, thread_count, seconds_process=-1):
+def video_detection(yolo_model, input_video_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path, thread_count, seconds_process=-1):
     '''
     Function:
         Take in a set of equirectangular panoramas (360-degree video) and apply object detection.
@@ -70,19 +70,10 @@ def video_detection(input_video_path, stereographic_image_size, FOV, output_imag
         frames_detections_with_meta = []
         for frame in frames:
             # detections contains all YOLOv8 'detections' within the current frame
-            detections = detect(frame['image'], confidence_threshold=0.45)
-
-            # Remove detections whose boxes are close to the edge of the frame
-            cleaned_detections = []
-
-            for detection in detections:
-                box = detection['box']
-                if not(box[0] < 5 or box[1] < 5 or box[0] + box[2] > frame['image'].shape[0] - 5 or box[1] + box[3] > frame['image'].shape[1] - 5):
-                    cleaned_detections.append(detection)
-
+            detections = detect(yolo_model, frame['image'], confidence_threshold=0.45)
 
             # Add meta data about the yaw and pitch rotations of the frame to derive the image
-            detections_with_meta = (cleaned_detections, frame['yaw'], frame['pitch'])
+            detections_with_meta = (detections, frame['yaw'], frame['pitch'])
             # Append the frame detections with meta data to the list of frames
             frames_detections_with_meta.append(detections_with_meta)
 
@@ -187,7 +178,7 @@ def video_detection(input_video_path, stereographic_image_size, FOV, output_imag
 
     
 
-def image_detection(input_panorama_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path):
+def image_detection(yolo_model, input_panorama_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path):
     '''
     Function:
         Take in an equirectangular panorama (360 image) and apply object detection.
@@ -221,16 +212,7 @@ def image_detection(input_panorama_path, stereographic_image_size, FOV, output_i
     frames_detections_with_meta = []
     for frame in frames:
         # detections contains all YOLOv8 'detections' within the current frame
-        detections = detect(frame['image'], confidence_threshold=0.45)
-
-        # Remove detections whose boxes are close to the edge of the frame
-        cleaned_detections = []
-
-        for detection in detections:
-            box = detection['box']
-            if not (box[0] < 5 or box[1] < 5 or box[0] + box[2] > frame['image'].shape[0] - 5 or box[1] + box[3] > frame['image'].shape[1] - 5):
-                cleaned_detections.append(detection)
-
+        detections = detect(yolo_model, frame['image'], confidence_threshold=0.45)
 
         # Add meta data about the yaw and pitch rotations of the frame to derive the image
         detections_with_meta = (detections, frame['yaw'], frame['pitch'])
@@ -285,6 +267,7 @@ def main():
     except ValueError:
         raise argparse.ArgumentTypeError("FOV Angles must be ThetaxPhi, where Theta and Phi are integers. See stereo.py description for specifics on angles.")
 
+    model = args.model
     output_image_file_path = args.output_frames
     output_json_file_path = args.output_detections
     thread_count = args.threads
@@ -296,10 +279,10 @@ def main():
 
     if args.video:
         input_video_path = args.video
-        video_detection(input_video_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path, thread_count, seconds_process)
+        video_detection(model, input_video_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path, thread_count, seconds_process)
     elif args.img:
         input_panorama_path = args.img
-        image_detection(input_panorama_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path)
+        image_detection(model, input_panorama_path, stereographic_image_size, FOV, output_image_file_path, output_json_file_path)
 
     
 
